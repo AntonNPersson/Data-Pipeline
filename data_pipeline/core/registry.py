@@ -2,7 +2,7 @@ from typing import List
 from data_pipeline.pipeline.Loaders.base_loader import BaseLoader
 from data_pipeline.pipeline.Parsers.base_parser import BaseParser
 from data_pipeline.pipeline.Transformers.base_transformer import BaseTransformer
-from data_pipeline.pipeline.mappers.base_mapper import BaseMapper
+from data_pipeline.pipeline.converters.base_converter import BaseConverter
 from data_pipeline.core.pipeline import DataPipeline
 
 class PipelineRegistry:
@@ -12,7 +12,7 @@ class PipelineRegistry:
         self.loaders = {}
         self.parsers = {}
         self.transformers = {}
-        self.mappers = {}
+        self.converters = {}
     
     def register_loader(self, name: str, loader_class: type):
         if not issubclass(loader_class, BaseLoader):
@@ -30,9 +30,9 @@ class PipelineRegistry:
         self.transformers[name] = transformer_class
     
     def register_mapper(self, name: str, mapper_class: type):
-        if not issubclass(mapper_class, BaseMapper):
-            raise ValueError("Mapper must inherit from BaseMapper")
-        self.mappers[name] = mapper_class
+        if not issubclass(mapper_class, BaseConverter):
+            raise ValueError("Mapper must inherit from BaseConverter")
+        self.converters[name] = mapper_class
     
     def create_pipeline(self, loader_name: str, parser_name: str, 
                        transformer_names: List[str], mapper_name: str):
@@ -40,6 +40,6 @@ class PipelineRegistry:
         loader = self.loaders[loader_name]()
         parser = self.parsers[parser_name]()
         transformers = [self.transformers[name]() for name in transformer_names]
-        mapper = self.mappers[mapper_name]()
+        mapper = self.converters[mapper_name]()
         
         return DataPipeline(loader, parser, transformers, mapper)

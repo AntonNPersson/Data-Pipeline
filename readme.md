@@ -1,6 +1,6 @@
 # Data Pipeline Framework
 
-A flexible, extensible Python framework for building data processing pipelines. Load data from any source, transform it however you want, and map it to custom objects with ease.
+A flexible, extensible Python framework for building data processing pipelines. Load data from any source, transform it however you want, and intelligently convert it to custom objects with zero configuration.
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
@@ -12,13 +12,21 @@ pip install data-pipeline-framework
 ```
 
 ```python
-from data_pipeline import DataPipeline
+from dataclasses import dataclass
+from data_pipeline import DataPipeline, SmartConverter
 from data_pipeline.pipeline.loaders import CSVLoader
 from data_pipeline.pipeline.parsers import CSVParser
 from data_pipeline.pipeline.transformers import AutoCategorizerTransformer, DataCleanerTransformer
-from data_pipeline.pipeline.mappers import QuestionMapper
 
-# Create your pipeline
+@dataclass
+class Question:
+    text: str
+    category: str
+    difficulty: int
+    answers: List[str]
+    correct_answer: str
+
+# Create your pipeline - works with ANY CSV structure!
 pipeline = DataPipeline(
     loader=CSVLoader(),
     parser=CSVParser(),
@@ -26,10 +34,10 @@ pipeline = DataPipeline(
         DataCleanerTransformer(),
         AutoCategorizerTransformer()
     ],
-    mapper=QuestionMapper()
+    converter=SmartConverter(Question)  # Automatically maps columns!
 )
 
-# Process your data
+# Process your data - no matter how columns are named
 questions = pipeline.execute('my_data.csv')
 print(f"Processed {len(questions)} items!")
 ```
@@ -52,16 +60,18 @@ print(f"Processed {len(questions)} items!")
 This framework follows a simple but powerful pipeline pattern:
 
 ```
-Source → Loader → Parser → Transformers → Mapper → Custom Objects
+Source → Loader → Parser → Transformers → Smart Converter → Custom Objects
 ```
 
-**Why use this framework?**
+**What makes this special?**
+- 🧠 **Smart Conversion**: Automatically maps any column names to your object fields
+- ✅ **Zero Configuration**: Works with any reasonable CSV/data structure
+- ✅ **Type Intelligence**: Converts values to correct types automatically
 - ✅ **Modular**: Mix and match components
 - ✅ **Extensible**: Easy to add custom logic
 - ✅ **Type-safe**: Full type hints and generics
 - ✅ **Chainable**: Multiple transformers in sequence
-- ✅ **Testable**: Each component is independently testable
-- ✅ **Reusable**: Share components across projects
+- ✅ **Universal**: Same framework works for any custom object
 
 ## 📦 Installation
 
@@ -89,14 +99,14 @@ pip install -e ".[dev]"
 ### Pipeline Components
 
 1. **Loader**: Loads raw data from any source (files, APIs, databases)
-2. **Parser**: Converts raw data into structured dictionaries
+2. **Parser**: Converts raw data into tabular format (list of dictionaries)
 3. **Transformers**: Manipulate, enrich, or clean the data (chainable!)
-4. **Mapper**: Converts final data into your custom objects
+4. **Smart Converter**: Intelligently maps tabular data to your custom objects
 
 ### Key Classes
 
 ```python
-from data_pipeline import BaseLoader, BaseParser, BaseTransformer, BaseMapper
+from data_pipeline import BaseLoader, BaseParser, BaseTransformer, BaseConverter, SmartConverter
 
 class MyLoader(BaseLoader):
     def load(self, source: str, **kwargs) -> Any: ...
@@ -106,9 +116,26 @@ class MyTransformer(BaseTransformer):
     def transform(self, data: List[Dict], **kwargs) -> List[Dict]: ...
     def get_description(self) -> str: ...
 
-class MyMapper(BaseMapper[MyObject]):
-    def map(self, data: List[Dict], **kwargs) -> List[MyObject]: ...
-    def get_output_type(self) -> type: ...
+# The magic happens here - no manual mapping needed!
+converter = SmartConverter(MyCustomClass)
+```
+
+### Smart Conversion Examples
+
+The `SmartConverter` automatically maps columns to object fields:
+
+```python
+# Your CSV columns can be named ANYTHING:
+"Question Text" → text
+"Topic" → category
+"Difficulty Level" → difficulty
+"Answer Options" → answers
+"Correct Answer" → correct_answer
+
+# All of these work automatically:
+"Q", "question", "prompt" → text
+"cat", "subject", "type" → category
+"level", "hard", "complexity" → difficulty
 ```
 
 ## 🛠 Built-in Components
@@ -127,8 +154,10 @@ class MyMapper(BaseMapper[MyObject]):
 ### Transformers
 - `DataCleanerTransformer` - Clean and normalize data
 - `AutoCategorizerTransformer` - Auto-categorize based on keywords
+- `DifficultyAnalyzerTransformer` - Analyze text complexity
 - `DeduplicatorTransformer` - Remove duplicate entries
 - `TranslatorTransformer` - Translate text fields
+- `SentimentAnalyzerTransformer` - Add sentiment analysis
 
 ### Mappers
 - `QuestionMapper` - Map to Question objects
@@ -136,52 +165,80 @@ class MyMapper(BaseMapper[MyObject]):
 
 ## 📚 Usage Examples
 
-### Basic Example
+### Universal Smart Conversion
 
 ```python
 from dataclasses import dataclass
-from data_pipeline import DataPipeline, BaseMapper
+from data_pipeline import DataPipeline, SmartConverter
 from data_pipeline.pipeline.loaders import CSVLoader
 from data_pipeline.pipeline.parsers import CSVParser
-from data_pipeline.pipeline.transformers import DataCleanerTransformer
 
 @dataclass
 class Product:
     name: str
     price: float
     category: str
+    in_stock: bool
 
-class ProductMapper(BaseMapper[Product]):
-    def map(self, data, **kwargs):
-        return [Product(
-            name=item['name'],
-            price=float(item['price']),
-            category=item['category']
-        ) for item in data]
-    
-    def get_output_type(self):
-        return Product
-
-# Create and run pipeline
+# No manual mapping needed! SmartConverter figures it out
 pipeline = DataPipeline(
     loader=CSVLoader(),
     parser=CSVParser(),
-    transformers=[DataCleanerTransformer()],
-    mapper=ProductMapper()
+    transformers=[],
+    converter=SmartConverter(Product)  # Works with ANY object!
 )
 
+# This CSV with ANY column names works:
+# "Product Name", "Cost", "Type", "Available" 
+# "item", "price", "cat", "stock"
+# "name", "amount", "category", "in_stock"
 products = pipeline.execute('products.csv')
+```
+
+### Working with Any Data Structure
+
+```python
+# Define your domain object
+@dataclass
+class Question:
+    text: str
+    category: str
+    difficulty: int
+    answers: List[str]
+    correct_answer: str
+
+# The converter handles ALL of these CSV variations automatically:
+
+# Variation 1:
+# "Question Text", "Topic", "Level", "Options", "Answer"
+
+# Variation 2: 
+# "Q", "Subject", "Difficulty", "Choices", "Correct"
+
+# Variation 3:
+# "question", "cat", "hard", "answers", "solution"
+
+converter = SmartConverter(Question)
+# All variations work with zero configuration!
 ```
 
 ### Advanced Example with Multiple Transformers
 
 ```python
-from data_pipeline import DataPipeline, PipelineConfig
+from data_pipeline import DataPipeline, PipelineConfig, SmartConverter
 from data_pipeline.pipeline.transformers import (
     DataCleanerTransformer,
     AutoCategorizerTransformer,
     DifficultyAnalyzerTransformer
 )
+
+@dataclass
+class Question:
+    text: str
+    category: str
+    difficulty: int
+    answers: List[str]
+    correct_answer: str
 
 # Configure custom categorization
 categorizer = AutoCategorizerTransformer(
@@ -201,17 +258,34 @@ pipeline = DataPipeline(
         categorizer,                   # Then categorize
         DifficultyAnalyzerTransformer() # Finally analyze difficulty
     ],
-    mapper=QuestionMapper()
+    converter=SmartConverter(Question)  # Smart conversion!
 )
 
 # Configure with custom parameters
 config = PipelineConfig(
     parser_kwargs={'delimiter': ';'},
     transformer_kwargs={'strict_validation': True},
-    mapper_kwargs={'skip_invalid': True}
+    converter_kwargs={'confidence_threshold': 0.8}
 )
 
 questions = pipeline.execute('quiz_data.csv', config)
+```
+
+### Type-Aware Conversion
+
+```python
+@dataclass
+class SmartObject:
+    name: str
+    count: int           # "5" → 5
+    price: float         # "19.99" → 19.99
+    active: bool         # "yes" → True, "1" → True
+    tags: List[str]      # "red|blue|green" → ["red", "blue", "green"]
+    description: Optional[str] = None
+
+# SmartConverter handles all type conversions automatically
+converter = SmartConverter(SmartObject)
+# Works with messy data, missing fields, different formats
 ```
 
 ### Working with APIs
@@ -225,11 +299,37 @@ pipeline = DataPipeline(
     loader=APILoader(),
     parser=JSONParser(),
     transformers=[DataCleanerTransformer()],
-    mapper=ProductMapper()
+    converter=SmartConverter(Product)  # Works with any data source!
 )
 
 # Execute with API endpoint
 products = pipeline.execute('https://api.example.com/products')
+```
+
+### Multiple Object Types
+
+```python
+# Same framework, different objects
+@dataclass
+class Person:
+    name: str
+    email: str
+    age: int
+    
+@dataclass  
+class Order:
+    id: str
+    customer: str
+    total: float
+    items: List[str]
+
+# Create pipelines for different data types
+people_pipeline = DataPipeline(..., converter=SmartConverter(Person))
+orders_pipeline = DataPipeline(..., converter=SmartConverter(Order))
+
+# Both work automatically with appropriate CSV files
+people = people_pipeline.execute('contacts.csv')
+orders = orders_pipeline.execute('sales.csv')
 ```
 
 ## 🔧 Creating Custom Components
@@ -271,33 +371,53 @@ class EmailValidatorTransformer(BaseTransformer):
         return "Validates email addresses and adds email_valid field"
 ```
 
-### Custom Mapper
+### Custom Converter
 
 ```python
-from data_pipeline import BaseMapper
-from dataclasses import dataclass
-from typing import List
+from data_pipeline import BaseConverter
+from typing import Type, List, Dict, Any
 
-@dataclass
-class User:
-    name: str
-    email: str
-    is_valid: bool
-
-class UserMapper(BaseMapper[User]):
-    def map(self, data, **kwargs):
-        users = []
+class CustomConverter(BaseConverter[MyObject]):
+    def convert(self, data: List[Dict[str, Any]], **kwargs) -> List[MyObject]:
+        # Custom conversion logic
+        results = []
         for item in data:
-            user = User(
-                name=item.get('name', ''),
-                email=item.get('email', ''),
-                is_valid=item.get('email_valid', False)
+            obj = MyObject(
+                # Your custom mapping logic here
+                special_field=self.custom_transform(item)
             )
-            users.append(user)
-        return users
+            results.append(obj)
+        return results
     
-    def get_output_type(self):
-        return User
+    def get_target_type(self) -> Type[MyObject]:
+        return MyObject
+    
+    def suggest_field_mapping(self, columns: List[str]) -> Dict[str, str]:
+        # Your custom field mapping logic
+        return {'target_field': 'source_column'}
+```
+
+### Advanced Smart Converter
+
+```python
+from data_pipeline import SmartConverter
+
+class EnhancedConverter(SmartConverter[Question]):
+    def __init__(self):
+        super().__init__(Question)
+        # Add custom field aliases
+        self.field_aliases.update({
+            'text': ['question', 'q', 'prompt', 'query', 'problem'],
+            'difficulty': ['level', 'hard', 'complexity', 'diff', 'grade']
+        })
+    
+    def _convert_value(self, value: Any, target_type: type) -> Any:
+        # Override conversion for special cases
+        if target_type == int and isinstance(value, str):
+            difficulty_map = {'easy': 1, 'medium': 2, 'hard': 3}
+            return difficulty_map.get(value.lower(), super()._convert_value(value, target_type))
+        
+        return super()._convert_value(value, target_type)
 ```
 
 ### Register Your Components
@@ -308,14 +428,14 @@ from data_pipeline import registry
 # Register your custom components
 registry.register_loader('api', APILoader)
 registry.register_transformer('email_validator', EmailValidatorTransformer)
-registry.register_mapper('user', UserMapper)
+registry.register_converter('enhanced_question', EnhancedConverter)
 
 # Create pipeline from registry
 pipeline = registry.create_pipeline(
     loader_name='api',
     parser_name='json',
     transformer_names=['data_cleaner', 'email_validator'],
-    mapper_name='user'
+    converter_name='enhanced_question'
 )
 ```
 
@@ -355,12 +475,29 @@ config = PipelineConfig(
         'strict_mode': True,
         'skip_errors': False
     },
-    mapper_kwargs={
-        'validate_types': True
+    converter_kwargs={
+        'confidence_threshold': 0.8,  # Minimum field mapping confidence
+        'strict_types': True,          # Enforce type conversion
+        'skip_invalid': False          # Skip rows that can't be converted
     }
 )
 
 results = pipeline.execute('data.csv', config)
+```
+
+### Field Mapping Insights
+
+```python
+# See what mappings the SmartConverter suggests
+converter = SmartConverter(Question)
+columns = ["Question Text", "Topic", "Level", "Answer Options", "Correct Answer"]
+mapping = converter.suggest_field_mapping(columns)
+print(f"Suggested mapping: {mapping}")
+# Output: {'text': 'Question Text', 'category': 'Topic', 'difficulty': 'Level', ...}
+
+# Override mapping if needed
+custom_mapping = {'text': 'Question Text', 'category': 'Subject'}
+converter.field_mapping = custom_mapping
 ```
 
 ### Conditional Transformers
@@ -385,7 +522,7 @@ class ConditionalTransformer(BaseTransformer):
 
 ```python
 class DataPipeline(Generic[T]):
-    def __init__(self, loader, parser, transformers, mapper): ...
+    def __init__(self, loader, parser, transformers, converter): ...
     def execute(self, source: str, config: PipelineConfig = None) -> List[T]: ...
 ```
 
@@ -397,7 +534,17 @@ class PipelineConfig:
     loader_kwargs: Dict[str, Any] = None
     parser_kwargs: Dict[str, Any] = None
     transformer_kwargs: Dict[str, Any] = None
-    mapper_kwargs: Dict[str, Any] = None
+    converter_kwargs: Dict[str, Any] = None  # New!
+```
+
+### SmartConverter
+
+```python
+class SmartConverter(BaseConverter[T]):
+    def __init__(self, target_class: Type[T]): ...
+    def convert(self, data: List[Dict], **kwargs) -> List[T]: ...
+    def suggest_field_mapping(self, columns: List[str]) -> Dict[str, str]: ...
+    def get_target_type(self) -> Type[T]: ...
 ```
 
 ### Registry
@@ -407,8 +554,54 @@ class PipelineRegistry:
     def register_loader(self, name: str, loader_class: type): ...
     def register_parser(self, name: str, parser_class: type): ...
     def register_transformer(self, name: str, transformer_class: type): ...
-    def register_mapper(self, name: str, mapper_class: type): ...
-    def create_pipeline(self, loader_name, parser_name, transformer_names, mapper_name): ...
+    def register_converter(self, name: str, converter_class: type): ...  # New!
+    def create_pipeline(self, loader_name, parser_name, transformer_names, converter_name): ...
+```
+
+## 🧪 Testing
+
+```bash
+# Run tests
+pytest
+
+# Run with coverage
+pytest --cov=data_pipeline
+
+# Run specific test
+pytest tests/test_transformers.py::test_auto_categorizer
+```
+
+### Example Test
+
+```python
+def test_smart_converter():
+    from data_pipeline import SmartConverter
+    
+    @dataclass
+    class TestObject:
+        name: str
+        count: int
+        active: bool
+    
+    converter = SmartConverter(TestObject)
+    
+    # Test field mapping
+    columns = ["Product Name", "Quantity", "Is Active"]
+    mapping = converter.suggest_field_mapping(columns)
+    assert mapping['name'] == 'Product Name'
+    assert mapping['count'] == 'Quantity'
+    assert mapping['active'] == 'Is Active'
+    
+    # Test conversion
+    data = [
+        {"Product Name": "Widget", "Quantity": "5", "Is Active": "yes"}
+    ]
+    result = converter.convert(data)
+    
+    assert len(result) == 1
+    assert result[0].name == "Widget"
+    assert result[0].count == 5
+    assert result[0].active == True
 ```
 
 ## 🤝 Contributing
@@ -424,6 +617,15 @@ pip install -e ".[dev]"
 pre-commit install
 ```
 
+### Code Style
+
+We use `black` for code formatting and `mypy` for type checking:
+
+```bash
+black src/
+mypy src/
+```
+
 ## 📝 License
 
 This project is licensed under the CC BY-NC 4.0 License - see the [LICENSE](LICENSE) file for details.
@@ -432,13 +634,14 @@ This project is licensed under the CC BY-NC 4.0 License - see the [LICENSE](LICE
 
 - Inspired by modern data engineering pipelines
 - Built with type safety and extensibility in mind
-- Special thanks to all contributors which is only me.
+- Special thanks to all contributors
 
 ## 📞 Support
 
-- 🐛 [Issue Tracker](https://github.com/antonnpersson/data-pipeline/issues)
-- 💬 [Discussions](https://github.com/antonnpersson/data-pipeline/discussions)
-- 📧 Email: antonnilspersson@gmail.com
+- 📚 [Documentation](https://data-pipeline-framework.readthedocs.io/)
+- 🐛 [Issue Tracker](https://github.com/yourusername/data-pipeline-framework/issues)
+- 💬 [Discussions](https://github.com/yourusername/data-pipeline-framework/discussions)
+- 📧 Email: support@data-pipeline-framework.com
 
 ---
 

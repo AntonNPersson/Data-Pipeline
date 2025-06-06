@@ -3,7 +3,7 @@ from typing import Dict, Any
 from data_pipeline.pipeline.Loaders.base_loader import BaseLoader
 from data_pipeline.pipeline.Parsers.base_parser import BaseParser
 from data_pipeline.pipeline.Transformers.base_transformer import BaseTransformer
-from data_pipeline.pipeline.mappers.base_mapper import BaseMapper
+from data_pipeline.pipeline.converters.base_converter import BaseConverter
 from typing import List, Generic, TypeVar, Optional
 import logging
 
@@ -15,13 +15,13 @@ class PipelineConfig:
     loader_kwargs: Dict[str, Any] = None
     parser_kwargs: Dict[str, Any] = None
     transformer_kwargs: Dict[str, Any] = None
-    mapper_kwargs: Dict[str, Any] = None
+    converter_kwargs: Dict[str, Any] = None
     
     def __post_init__(self):
         self.loader_kwargs = self.loader_kwargs or {}
         self.parser_kwargs = self.parser_kwargs or {}
         self.transformer_kwargs = self.transformer_kwargs or {}
-        self.mapper_kwargs = self.mapper_kwargs or {}
+        self.converter_kwargs = self.converter_kwargs or {}
 
 class DataPipeline(Generic[T]):
     """Main pipeline orchestrator"""
@@ -30,7 +30,7 @@ class DataPipeline(Generic[T]):
                  loader: BaseLoader,
                  parser: BaseParser, 
                  transformers: List[BaseTransformer],
-                 mapper: BaseMapper[T]):
+                 mapper: BaseConverter[T]):
         self.loader = loader
         self.parser = parser
         self.transformers = transformers  # Chain of transformers
@@ -62,7 +62,7 @@ class DataPipeline(Generic[T]):
             
             # Map to custom objects
             self.logger.info("Mapping to custom objects...")
-            result = self.mapper.map(transformed_data, **config.mapper_kwargs)
+            result = self.mapper.map(transformed_data, **config.converter_kwargs)
             
             self.logger.info(f"Pipeline completed. Processed {len(result)} items.")
             return result
