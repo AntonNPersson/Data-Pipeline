@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Dict, Any
-from data_pipeline.pipeline.Loaders.base_loader import BaseLoader
-from data_pipeline.pipeline.Parsers.base_parser import BaseParser
-from data_pipeline.pipeline.Transformers.base_transformer import BaseTransformer
+from data_pipeline.pipeline.loaders.base_loader import BaseLoader
+from data_pipeline.pipeline.parsers.base_parser import BaseParser
+from data_pipeline.pipeline.transformers.base_transformer import BaseTransformer
 from data_pipeline.pipeline.converters.base_converter import BaseConverter
 from typing import List, Generic, TypeVar, Optional
 import logging
@@ -30,11 +30,11 @@ class DataPipeline(Generic[T]):
                  loader: BaseLoader,
                  parser: BaseParser, 
                  transformers: List[BaseTransformer],
-                 mapper: BaseConverter[T]):
+                 converter: BaseConverter[T]):
         self.loader = loader
         self.parser = parser
         self.transformers = transformers  # Chain of transformers
-        self.mapper = mapper
+        self.converter = converter
         self.logger = logging.getLogger(__name__)
     
     def execute(self, source: str, config: Optional[PipelineConfig] = None) -> List[T]:
@@ -62,7 +62,7 @@ class DataPipeline(Generic[T]):
             
             # Map to custom objects
             self.logger.info("Mapping to custom objects...")
-            result = self.mapper.map(transformed_data, **config.converter_kwargs)
+            result = self.converter.convert(transformed_data, **config.converter_kwargs)
             
             self.logger.info(f"Pipeline completed. Processed {len(result)} items.")
             return result

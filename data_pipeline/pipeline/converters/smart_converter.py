@@ -1,4 +1,5 @@
 from data_pipeline.pipeline.converters.base_converter import BaseConverter
+from data_pipeline.utils.mappings import FIELD_ALIASES
 from typing import Dict, Any, List, Type, Generic, TypeVar, Optional
 import inspect
 import logging
@@ -21,20 +22,7 @@ class SmartConverter(BaseConverter[T], Generic[T]):
         target_fields = self._get_target_fields()
         
         # Define common aliases for different field types
-        common_aliases = {
-            'id': ['id', 'identifier', 'key', 'pk', 'primary_key', 'uid'],
-            'name': ['name', 'title', 'label', 'description'],
-            'text': ['text', 'content', 'body', 'message', 'question', 'prompt'],
-            'category': ['category', 'cat', 'type', 'kind', 'genre', 'topic', 'subject'],
-            'difficulty': ['difficulty', 'level', 'hard', 'complexity', 'diff'],
-            'score': ['score', 'points', 'rating', 'value'],
-            'answer': ['answer', 'correct_answer', 'solution', 'correct', 'right_answer'],
-            'answers': ['answers', 'options', 'choices', 'alternatives'],
-            'date': ['date', 'created', 'timestamp', 'time'],
-            'price': ['price', 'cost', 'amount', 'value'],
-            'email': ['email', 'mail', 'e_mail'],
-            'phone': ['phone', 'telephone', 'mobile', 'cell'],
-        }
+        common_aliases = FIELD_ALIASES.copy()
         
         # Create aliases for each target field
         for field in target_fields:

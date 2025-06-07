@@ -1,0 +1,97 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "data-pipeline-framework"
+version = "0.1.0"
+authors = [
+    {name = "Anton Nils Persson", email = "antonnilspersson@gmail.com"},
+]
+description = "A flexible, extensible Python framework for building data processing pipelines with intelligent object conversion"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "CC-BY-NC-4.0"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Data Processing",
+    "Topic :: Text Processing",
+    "Topic :: Utilities",
+]
+keywords = ["data", "pipeline", "etl", "csv", "json", "conversion", "transformation"]
+dependencies = [
+    "typing-extensions>=4.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=22.0.0",
+    "isort>=5.0.0",
+    "flake8>=5.0.0",
+    "mypy>=1.0.0",
+]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.0.0",
+]
+full = [
+    "pandas>=1.3.0",
+    "numpy>=1.21.0",
+    "requests>=2.25.0",
+    "openpyxl>=3.0.0",
+    "lxml>=4.6.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/antonnpersson/data-pipeline"
+"Bug Reports" = "https://github.com/antonnpersson/data-pipeline/issues"
+"Source" = "https://github.com/antonnpersson/data-pipeline"
+
+[project.scripts]
+data-pipeline = "data_pipeline.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["data_pipeline*"]
+exclude = ["tests*", "docs*", "examples*"]
+
+[tool.black]
+line-length = 88
+target-version = ["py38"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["data_pipeline"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["data_pipeline"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
