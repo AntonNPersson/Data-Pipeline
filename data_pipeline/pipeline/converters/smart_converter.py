@@ -133,6 +133,14 @@ class SmartConverter(BaseConverter[T], Generic[T]):
         
         # Get target field types for conversion
         field_types = self._get_field_types()
+
+        field_aliases = kwargs.get('field_aliases', {})
+        if field_aliases:
+            # Merge provided field aliases with internal ones
+            for field, aliases in field_aliases.items():
+                if field not in self.field_aliases:
+                    self.field_aliases[field] = []
+                self.field_aliases[field].extend(aliases)
         
         # Convert each row
         results = []
@@ -243,3 +251,9 @@ class SmartConverter(BaseConverter[T], Generic[T]):
     
     def get_target_type(self) -> Type[T]:
         return self.target_class
+
+    def get_available_configs(self) -> Dict[str, Any]:
+        """Return available configuration options for this converter"""
+        return {
+            'field_aliases': 'Dict[str, List[str]]: Aliases for field names to improve mapping'
+        }

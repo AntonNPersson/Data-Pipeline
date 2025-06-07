@@ -22,3 +22,9 @@ class CSVLoader(BaseLoader):
     
     def validate_source(self, source: str) -> bool:
         return source.endswith('.csv') and os.path.exists(source)
+    
+    def get_available_configs(self) -> dict:
+        return {
+            'encoding': 'str: Encoding to use for reading the CSV file (default: utf-8)',
+            'timeout': 'int: Timeout in seconds for loading the data (default: None)'
+        }

@@ -480,6 +480,10 @@ config = PipelineConfig(
 )
 
 results = pipeline.execute('data.csv', config)
+
+# To get available config options
+CSVLoader.get_available_configs()
+
 ```
 
 ### Field Mapping Insights
@@ -553,6 +557,39 @@ class PipelineRegistry:
     def register_transformer(self, name: str, transformer_class: type): ...
     def register_converter(self, name: str, converter_class: type): ...  # New!
     def create_pipeline(self, loader_name, parser_name, transformer_names, converter_name): ...
+```
+
+### Loader
+```python
+class BaseLoader:
+    def load(self, source: str, **kwargs): ...
+    def validate_source(self, source: str): ...
+    def get_available_configs(self): ...
+```
+
+### Parser
+```python
+class BaseParser:
+    def parse(self, data: str, **kwargs): ...
+    def get_supported_formats(self): ...
+    def get_available_configs(self): ...
+```
+
+### Transformer
+```python
+class BaseTransformer:
+    def transform(self, data: List[Dict[str, Any]], **kwargs): ...
+    def get_description(self): ...
+    def get_available_configs(self): ...
+```
+
+### Converter
+```python
+class BaseConverter:
+    def convert(self, data: List[Dict[str, Any]], **kwargs): ...
+    def get_target_type(self) -> Type[T]: ...
+    def suggest_field_mapping(self, available_columns: List[str]) -> Dict[str, str]: ...
+    def get_available_configs(self): ...
 ```
 
 ## 🧪 Testing

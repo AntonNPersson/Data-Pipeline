@@ -27,3 +27,12 @@ class BaseLoader(ABC):
         :return: True if the source is valid, False otherwise.
         """
         pass
+
+    @abstractmethod
+    def get_available_configs(self) -> dict:
+        """
+        Get available configuration options for this loader.
+
+        :return: A dictionary of available configuration options.
+        """
+        pass

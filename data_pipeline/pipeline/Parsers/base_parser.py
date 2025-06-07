@@ -22,3 +22,12 @@ class BaseParser(ABC):
     def get_supported_formats(self) -> List[str]:
         """Return list of supported data formats"""
         pass
+
+    @abstractmethod
+    def get_available_configs(self) -> Dict[str, str]:
+        """
+        Get available configuration options for this parser.
+
+        :return: A dictionary of available configuration options.
+        """
+        pass

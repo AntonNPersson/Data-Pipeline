@@ -9,20 +9,16 @@ from collections import Counter
 class AutoGeneratingConverter(BaseConverter):
     """Converter that dynamically creates custom objects based on data structure"""
     
-    def __init__(self, class_name: str = "GeneratedDataModel", 
-                 sample_size: int = 100,
-                 confidence_threshold: float = 0.8):
+    def __init__(self, class_name: str = "GeneratedDataModel"):
         """
         Initialize the auto-generating converter
         
         Args:
             class_name: Name for the generated class
-            sample_size: Number of rows to sample for type inference
-            confidence_threshold: Minimum confidence required for type inference
         """
         self.class_name = class_name
-        self.sample_size = sample_size
-        self.confidence_threshold = confidence_threshold
+        self.sample_size = 100  # Default sample size for type inference
+        self.confidence_threshold = 0.8  # Default confidence threshold for type inference
         self.generated_class = None
         self._schema = None
         self._column_mapping = None
@@ -376,4 +372,11 @@ class AutoGeneratingConverter(BaseConverter):
                 for field_type in [self._schema[original_col]]
             },
             'total_fields': len(self._schema)
+        }
+    
+    def get_available_configs(self) -> Dict[str, Any]:
+        """Return available configuration options for this converter"""
+        return {
+            'sample_size': 'int: Number of rows to sample for type inference (default: 100)',
+            'confidence_threshold': 'float: Minimum confidence required for type inference (default: 0.8)'
         }

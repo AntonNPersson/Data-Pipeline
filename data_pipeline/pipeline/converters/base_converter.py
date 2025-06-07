@@ -20,3 +20,8 @@ class BaseConverter(ABC, Generic[T]):
     def suggest_field_mapping(self, available_columns: List[str]) -> Dict[str, str]:
         """Suggest mapping from available columns to target object fields"""
         pass
+
+    @abstractmethod
+    def get_available_configs(self) -> Dict[str, Any]:
+        """Return available configuration options for this converter"""
+        pass

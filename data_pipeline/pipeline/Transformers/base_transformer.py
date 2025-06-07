@@ -13,3 +13,8 @@ class BaseTransformer(ABC):
     def get_description(self) -> str:
         """Return description of what this transformer does"""
         pass
+
+    @abstractmethod
+    def get_available_configs(self) -> Dict[str, str]:
+        """Return available configuration options for this transformer"""
+        pass

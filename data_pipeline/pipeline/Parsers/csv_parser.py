@@ -13,3 +13,9 @@ class CSVParser(BaseParser):
     
     def get_supported_formats(self) -> List[str]:
         return ['.csv']
+    
+    def get_available_configs(self) -> Dict[str, str]:
+        return {
+            'delimiter': 'str: Delimiter used in the CSV file (default: ,)',
+            'quotechar': 'str: Character used to quote fields containing special characters (default: ")'
+        }

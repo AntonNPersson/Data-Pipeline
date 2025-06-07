@@ -129,3 +129,9 @@ class AutoCategorizerTransformer(BaseTransformer):
     
     def get_description(self) -> str:
         return "Auto-categorizes items based on content using strict_mode from kwargs"
+    
+    def get_available_configs(self) -> Dict[str, str]:
+        return {
+            'strict_mode': 'bool: If True, uses strict word boundary matching; if False, uses flexible matching with common variations',
+            'skip_errors': 'bool: If True, skips items without a category instead of raising an error'
+        }
