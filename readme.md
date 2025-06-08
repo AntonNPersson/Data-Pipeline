@@ -94,6 +94,12 @@ cd data-pipeline-framework
 pip install -e ".[dev]"
 ```
 
+### Excel Processing Dependencies
+For Excel file processing, install additional dependencies:
+```bash
+pip install pandas openpyxl
+```
+
 ## 🧠 Core Concepts
 
 ### Pipeline Components
@@ -142,12 +148,14 @@ The `SmartConverter` automatically maps columns to object fields:
 
 ### Loaders
 - `CSVLoader` - Load CSV files
+- `ExcelLoader` - Load Excel files (.xlsx, .xls, .xlsm, .xlsb)
 - `JSONLoader` - Load JSON files
 - `APILoader` - Load data from REST APIs
 - `DatabaseLoader` - Load from SQL databases
 
 ### Parsers
 - `CSVParser` - Parse CSV data
+- `ExcelParser` - Parse Excel data with multi-sheet support
 - `JSONParser` - Parse JSON data
 - `XMLParser` - Parse XML data
 
@@ -285,6 +293,44 @@ class SmartObject:
 # SmartConverter handles all type conversions automatically
 converter = SmartConverter(SmartObject)
 # Works with messy data, missing fields, different formats
+```
+
+### Working with Excel Files
+
+```python
+from data_pipeline.pipeline.loaders import ExcelLoader
+from data_pipeline.pipeline.parsers import ExcelParser
+from data_pipeline.pipeline.transformers import ExcelGameTransformer
+
+@dataclass
+class GameQuestion:
+    swedish_text: str
+    english_text: str
+    card_type: str
+    difficulty: str
+    spice_level: str
+
+# Excel pipeline with multi-sheet support
+pipeline = DataPipeline(
+    loader=ExcelLoader(),
+    parser=ExcelParser(),
+    transformers=[ExcelGameTransformer()],  # Transforms 117→40 columns
+    converter=SQLiteConverter(
+        db_path='game_data.db',
+        table_name='questions'
+    )
+)
+
+# Configure for specific sheet and header row
+config = PipelineConfig(
+    parser_kwargs={
+        'sheet_name': 'Basen',  # Specific sheet
+        'header': 1             # Row 2 as headers
+    }
+)
+
+# Process complex Excel structure
+results = pipeline.execute('game_data.xlsx', config)
 ```
 
 ### Working with APIs
