@@ -159,7 +159,8 @@ The `SmartConverter` automatically maps columns to object fields:
 
 ### Converters
 - `SmartConverter` - Tries to smartly convert data to provided object
-- `AutoGeneratingConverter` - Automatically cleans and generates a class based on provided data
+- `AutoGeneratingConverter` - Automatically generates a class based on provided data
+- `SQLiteConverter` - Automatically generates a SQLite database based on provided data
 
 ## 📚 Usage Examples
 

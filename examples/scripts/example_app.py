@@ -5,6 +5,7 @@ from data_pipeline.pipeline.parsers.csv_parser import CSVParser
 from data_pipeline.pipeline.transformers.auto_categorize_transformer import AutoCategorizerTransformer
 from data_pipeline.pipeline.converters.smart_converter import SmartConverter
 from data_pipeline.pipeline.converters.auto_generating_converter import AutoGeneratingConverter
+from data_pipeline.pipeline.converters.sqlite_converter import SQLiteConverter
 
 from dataclasses import dataclass
 from typing import List
@@ -27,14 +28,14 @@ if __name__ == "__main__":
     registry.register_loader('csv_loader', CSVLoader)
     registry.register_parser('csv_parser', CSVParser)
     registry.register_transformer('auto_categorizer', AutoCategorizerTransformer)
-    registry.register_converter('auto_converter', AutoGeneratingConverter("Question"))
+    registry.register_converter('auto_converter', SQLiteConverter(table_name='questions', db_path='data/questions.db'))
 
     # Optionally, add configuration for the pipeline
     configs = PipelineConfig(
         loader_kwargs={'encoding': 'utf-8'},
         parser_kwargs={'delimiter': ',', 'quotechar': '"'},
         transformer_kwargs={'strict_mode': False},
-        converter_kwargs={}
+        converter_kwargs={"auto_create_schema": True}
     )
     
     # Create a pipeline
